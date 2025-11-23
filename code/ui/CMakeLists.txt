@@ -2,6 +2,8 @@
 file(GLOB UI_SOURCES
     *.c
 )
+# Exclude VM syscall interface
+list(FILTER UI_SOURCES EXCLUDE REGEX ".*ui_syscalls\\.c$")
 
 # Add shared game files
 list(APPEND UI_SOURCES

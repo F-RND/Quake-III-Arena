@@ -16,7 +16,7 @@ option(USE_OPENAL_DLOPEN "Dynamically load OpenAL" OFF)
 option(USE_CURL "Use libcurl for downloads" ON)
 option(USE_CURL_DLOPEN "Dynamically load libcurl" OFF)
 option(USE_VOIP "Enable VoIP support" OFF)
-option(USE_INTERNAL_JPEG "Use internal JPEG library" ON)
+option(USE_INTERNAL_JPEG "Use internal JPEG library" OFF)  # JPEG code is embedded in tr_image.c
 
 # Platform detection
 if(UNIX AND NOT APPLE)
@@ -112,6 +112,7 @@ list(FILTER QCOMMON_SOURCES EXCLUDE REGEX ".*q3_laffer.*\\.c$")
 list(APPEND QCOMMON_SOURCES
     ${CODE_DIR}/game/q_math.c
     ${CODE_DIR}/game/q_shared.c
+    ${CODE_DIR}/qcommon/common_compat.c
 )
 
 # Server source files
@@ -192,7 +193,7 @@ elseif(WIN32)
 endif()
 
 # JPEG library
-if(USE_INTERNAL_JPEG)
+if(USE_INTERNAL_JPEG OR TRUE)  # Always use for now
     file(GLOB JPEG_SOURCES
         ${CODE_DIR}/jpeg-6/j*.c
     )
@@ -202,18 +203,23 @@ if(USE_INTERNAL_JPEG)
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jmemdos\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jmemmac\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jmemname\\.c$")
-    # Remove utilities with main() functions
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jpegtran\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*cjpeg\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*djpeg\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*rdjpgcom\\.c$")
     list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*wrjpgcom\\.c$")
+    list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jmemnobs\\.c$")
+    # Exclude jcapistd.c - tr_image.c has custom implementations of those functions
+    list(FILTER JPEG_SOURCES EXCLUDE REGEX ".*jcapistd\\.c$")
+else()
+    set(JPEG_SOURCES "")
 endif()
 
-# Splines library
+# Splines library (exclude q_shared.cpp - we use game/q_shared.c instead)
 file(GLOB SPLINES_SOURCES
     ${CODE_DIR}/splines/*.cpp
 )
+list(FILTER SPLINES_SOURCES EXCLUDE REGEX ".*q_shared\\.cpp$")
 
 # Include directories
 set(INCLUDE_DIRS

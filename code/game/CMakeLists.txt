@@ -5,6 +5,8 @@ file(GLOB GAME_SOURCES
 
 # Remove files that shouldn't be in the game module
 list(FILTER GAME_SOURCES EXCLUDE REGEX ".*bg_lib\\.c$")
+list(FILTER GAME_SOURCES EXCLUDE REGEX ".*g_syscalls\\.c$")  # Don't use in shared library build
+list(FILTER GAME_SOURCES EXCLUDE REGEX ".*g_rankings\\.c$")  # Old GameSpy rankings
 
 add_library(qagame SHARED ${GAME_SOURCES})
 
@@ -45,3 +47,5 @@ install(TARGETS qagame
     LIBRARY DESTINATION baseq3
     RUNTIME DESTINATION baseq3
 )
+
+list(FILTER GAME_SOURCES EXCLUDE REGEX ".*g_rankings\\.c$")  # Old GameSpy rankings - deprecated

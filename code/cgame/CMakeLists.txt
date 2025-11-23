@@ -2,6 +2,10 @@
 file(GLOB CGAME_SOURCES
     *.c
 )
+# Exclude Team Arena code
+list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*cg_newdraw\\.c$")
+list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*cg_syscalls\\.c$")
+list(FILTER CGAME_SOURCES EXCLUDE REGEX ".*cg_particles\\.c$")  # Conflicts with cg_marks.c
 
 # Add shared game files
 list(APPEND CGAME_SOURCES
