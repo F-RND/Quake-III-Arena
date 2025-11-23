@@ -22,6 +22,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //
 
 #include "g_local.h"
+#include "g_arena_gen.h"
 
 level_locals_t	level;
 
@@ -503,6 +504,9 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 		BotAILoadMap( restart );
 		G_InitBots( restart );
 	}
+
+	// Initialize procedural arena generator
+	G_InitArenaGenerator();
 
 	G_RemapTeamShaders();
 

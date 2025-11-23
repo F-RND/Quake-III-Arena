@@ -333,7 +333,7 @@ struct gclient_s {
 #define	MAX_SPAWN_VARS_CHARS	4096
 
 typedef struct {
-	struct gclient_s	*clients;		// [maxclients]
+	gclient_t	*clients;		// [maxclients]
 
 	struct gentity_s	*gentities;
 	int			gentitySize;
