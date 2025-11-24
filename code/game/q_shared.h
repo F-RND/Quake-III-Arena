@@ -1241,6 +1241,12 @@ typedef struct playerState_s {
 
 #define	BUTTON_ANY			2048			// any key whatsoever
 
+// Advanced movement modifiers
+#define BUTTON_MODIFIER1	4096			// Z key - bullet time modifier
+#define BUTTON_MODIFIER2	8192			// C key - wall run modifier
+#define BUTTON_MODIFIER3	16384			// Ctrl key - slide modifier
+#define BUTTON_DODGE		32768			// Shift key - dodge/roll
+
 #define	MOVE_RUN			120			// if forwardmove or rightmove are >= MOVE_RUN,
 										// then BUTTON_WALKING should be set
 

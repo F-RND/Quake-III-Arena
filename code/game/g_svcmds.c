@@ -24,6 +24,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // this file holds commands that can be executed by the server console, but not remote clients
 
 #include "g_local.h"
+#include "g_arena_gen.h"
 
 
 /*
@@ -439,6 +440,137 @@ char	*ConcatArgs( int start );
 
 /*
 =================
+Svcmd_GenerateArena_f
+
+Test command to generate a procedural arena
+Usage: generate_arena <seed> <depth> [theme]
+=================
+*/
+void Svcmd_GenerateArena_f( void ) {
+	char arg[MAX_TOKEN_CHARS];
+	int seed, depth;
+	arenaTheme_t theme = THEME_TECH;
+	arena_t *arena;
+
+	if ( trap_Argc() < 3 ) {
+		G_Printf( "Usage: generate_arena <seed> <depth> [theme]\n" );
+		G_Printf( "Themes: 0=Tech, 1=Gothic, 2=Space, 3=Hell, 4=Random\n" );
+		return;
+	}
+
+	trap_Argv( 1, arg, sizeof( arg ) );
+	seed = atoi( arg );
+
+	trap_Argv( 2, arg, sizeof( arg ) );
+	depth = atoi( arg );
+
+	if ( trap_Argc() >= 4 ) {
+		trap_Argv( 3, arg, sizeof( arg ) );
+		theme = (arenaTheme_t)atoi( arg );
+		if ( theme < 0 || theme >= THEME_COUNT ) {
+			theme = THEME_TECH;
+		}
+	}
+
+	G_Printf( "Generating arena with seed=%d, depth=%d, theme=%s\n",
+		seed, depth, G_GetThemeName(theme) );
+
+	arena = G_GenerateArena( seed, depth, theme );
+
+	if ( arena ) {
+		G_Printf( "Arena generated successfully:\n" );
+		G_Printf( "  Rooms: %d\n", arena->numRooms );
+		G_Printf( "  Corridors: %d\n", arena->numCorridors );
+		G_Printf( "  Enemy spawns: %d\n", arena->numEnemySpawns );
+		G_Printf( "  Item spawns: %d\n", arena->numItemSpawns );
+		G_Printf( "  Theme: %s\n", G_GetThemeName(arena->theme) );
+
+		// TODO: Compile BSP or generate runtime meshes
+		// For now, just report the generation
+		G_FreeArena( arena );
+	} else {
+		G_Printf( "Failed to generate arena\n" );
+	}
+}
+
+/*
+=================
+Svcmd_StartRoguelike_f
+
+Start a new roguelike run
+Usage: start_roguelike [seed]
+=================
+*/
+void Svcmd_StartRoguelike_f( void ) {
+	char arg[MAX_TOKEN_CHARS];
+	int seed = 0;
+
+	if ( trap_Argc() >= 2 ) {
+		trap_Argv( 1, arg, sizeof( arg ) );
+		seed = atoi( arg );
+	} else {
+		seed = (int)trap_Milliseconds(); // Use timestamp if no seed provided
+	}
+
+	G_Printf( "Starting roguelike run with seed=%d (permadeath enabled)\n", seed );
+
+	if ( G_StartRoguelikeRun( seed, qtrue ) ) {
+		G_Printf( "Roguelike run started successfully\n" );
+		G_Printf( "Use 'advance_arena' to progress to next depth\n" );
+	} else {
+		G_Printf( "Failed to start roguelike run\n" );
+	}
+}
+
+/*
+=================
+Svcmd_AdvanceArena_f
+
+Advance to the next arena depth
+=================
+*/
+void Svcmd_AdvanceArena_f( void ) {
+	roguelikeRun_t *run = G_GetCurrentRun();
+
+	if ( !run ) {
+		G_Printf( "No active roguelike run. Use 'start_roguelike' first.\n" );
+		return;
+	}
+
+	G_Printf( "Advancing from depth %d to %d\n", run->currentDepth, run->currentDepth + 1 );
+
+	if ( G_AdvanceToNextArena( run ) ) {
+		G_Printf( "Advanced to depth %d\n", run->currentDepth );
+	} else {
+		G_Printf( "Failed to advance arena\n" );
+	}
+}
+
+/*
+=================
+Svcmd_EndRoguelike_f
+
+End the current roguelike run
+=================
+*/
+void Svcmd_EndRoguelike_f( void ) {
+	roguelikeRun_t *run = G_GetCurrentRun();
+
+	if ( !run ) {
+		G_Printf( "No active roguelike run\n" );
+		return;
+	}
+
+	G_Printf( "Ending roguelike run:\n" );
+	G_Printf( "  Final depth: %d\n", run->currentDepth );
+	G_Printf( "  Score: %d\n", run->score );
+	G_Printf( "  Kills: %d\n", run->kills );
+
+	G_EndRoguelikeRun( run, qtrue );
+}
+
+/*
+=================
 ConsoleCommand
 
 =================
@@ -490,6 +622,27 @@ qboolean	ConsoleCommand( void ) {
 
 	if (Q_stricmp (cmd, "listip") == 0) {
 		trap_SendConsoleCommand( EXEC_NOW, "g_banIPs\n" );
+		return qtrue;
+	}
+
+	// Procedural arena generation commands
+	if (Q_stricmp (cmd, "generate_arena") == 0) {
+		Svcmd_GenerateArena_f();
+		return qtrue;
+	}
+
+	if (Q_stricmp (cmd, "start_roguelike") == 0) {
+		Svcmd_StartRoguelike_f();
+		return qtrue;
+	}
+
+	if (Q_stricmp (cmd, "advance_arena") == 0) {
+		Svcmd_AdvanceArena_f();
+		return qtrue;
+	}
+
+	if (Q_stricmp (cmd, "end_roguelike") == 0) {
+		Svcmd_EndRoguelike_f();
 		return qtrue;
 	}
 
