@@ -154,6 +154,13 @@ typedef enum {
 #define PMF_SCOREBOARD		8192	// spectate as a scoreboard
 #define PMF_INVULEXPAND		16384	// invulnerability sphere set to full size
 
+// Advanced movement flags
+#define PMF_DOUBLE_JUMPED	32768	// Used second jump
+#define PMF_WALL_RUNNING	65536	// Currently wall running
+#define PMF_SLIDING			131072	// Currently sliding
+#define PMF_DODGING			262144	// Currently dodging/rolling
+#define PMF_BULLET_TIME		524288	// Bullet time active
+
 #define	PMF_ALL_TIMES	(PMF_TIME_WATERJUMP|PMF_TIME_LAND|PMF_TIME_KNOCKBACK)
 
 #define	MAXTOUCH	32

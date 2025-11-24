@@ -56,7 +56,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "linux_local.h" // bk001204
 
 // Structure containing functions exported from refresh DLL
-refexport_t re;
+extern refexport_t re;
 
 unsigned  sys_frame_time;
 
@@ -494,7 +494,7 @@ void Sys_ConsoleInputInit()
               characters  EOF,  EOL,  EOL2, ERASE, KILL, REPRINT,
               STATUS, and WERASE, and buffers by lines.
      ISIG: when any of the characters  INTR,  QUIT,  SUSP,  or
-              DSUSP are received, generate the corresponding sig­
+              DSUSP are received, generate the corresponding sigï¿½
               nal
     */              
     tc.c_lflag &= ~(ECHO | ICANON);
@@ -724,6 +724,8 @@ void *Sys_LoadDll( const char *name, char *fqpath ,
   getcwd(curpath, sizeof(curpath));
 #if defined __i386__
   snprintf (fname, sizeof(fname), "%si386.so", name);
+#elif defined __x86_64__ || defined _M_X64
+  snprintf (fname, sizeof(fname), "%sx86_64.so", name);
 #elif defined __powerpc__   //rcg010207 - PPC support.
   snprintf (fname, sizeof(fname), "%sppc.so", name);
 #elif defined __axp__

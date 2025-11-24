@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "q_shared.h"
 #include "bg_public.h"
 #include "bg_local.h"
+#include "bg_movement.h"
 
 pmove_t		*pm;
 pml_t		pml;
@@ -353,6 +354,35 @@ static void PM_SetMovementDir( void ) {
 
 /*
 =============
+PM_CheckDoubleJump
+
+Check for double jump in air
+=============
+*/
+static qboolean PM_CheckDoubleJump( void ) {
+	// Jump button must be pressed
+	if ( pm->cmd.upmove < 10 ) {
+		return qfalse;
+	}
+
+	// Must have released jump since last jump
+	if ( pm->ps->pm_flags & PMF_JUMP_HELD ) {
+		return qfalse;
+	}
+
+	// Check if we can double jump
+	if ( !BG_CanDoubleJump( pm->ps ) ) {
+		return qfalse;
+	}
+
+	// Execute double jump
+	BG_DoDoubleJump( pm->ps, pm );
+
+	return qtrue;
+}
+
+/*
+=============
 PM_CheckJump
 =============
 */
@@ -380,6 +410,9 @@ static qboolean PM_CheckJump( void ) {
 	pm->ps->groundEntityNum = ENTITYNUM_NONE;
 	pm->ps->velocity[2] = JUMP_VELOCITY;
 	PM_AddEvent( EV_JUMP );
+
+	// Clear double jump flag when on ground
+	pm->ps->pm_flags &= ~PMF_DOUBLE_JUMPED;
 
 	if ( pm->cmd.forwardmove >= 0 ) {
 		PM_ForceLegsAnim( LEGS_JUMP );
@@ -606,6 +639,34 @@ static void PM_AirMove( void ) {
 	float		wishspeed;
 	float		scale;
 	usercmd_t	cmd;
+	vec3_t		wallNormal;
+
+	// Check for double jump
+	if ( PM_CheckDoubleJump() ) {
+		// Double jump executed, continue with air movement
+	}
+
+	// Check for wall run (Modifier2 + Space + Dodge near wall)
+	if ( (pm->cmd.buttons & BUTTON_MODIFIER2) &&
+		 (pm->cmd.buttons & BUTTON_DODGE) &&
+		 (pm->cmd.upmove > 0) ) {
+		if ( BG_FindWallRunSurface( pm, wallNormal ) ) {
+			if ( BG_CanWallRun( pm->ps, wallNormal ) ) {
+				BG_DoWallRun( pm->ps, pm, wallNormal );
+			}
+		}
+	}
+
+	// Check for dodge in air
+	if ( (pm->cmd.buttons & BUTTON_DODGE) && !(pm->cmd.buttons & BUTTON_MODIFIER2) ) {
+		if ( BG_CanDodge( pm->ps, pm->cmd.serverTime ) ) {
+			int direction = BG_GetMovementDirection( &pm->cmd );
+			if ( direction >= 0 ) {
+				BG_DoDodge( pm->ps, pm, direction );
+				return; // Dodge takes over movement
+			}
+		}
+	}
 
 	PM_Friction();
 
@@ -706,6 +767,27 @@ static void PM_WalkMove( void ) {
 		return;
 	}
 
+	// Check for slide (Modifier3 + Space + Dodge while moving fast)
+	if ( (pm->cmd.buttons & BUTTON_MODIFIER3) &&
+		 (pm->cmd.buttons & BUTTON_DODGE) &&
+		 (pm->cmd.upmove > 0) ) {
+		if ( BG_CanSlide( pm->ps ) ) {
+			BG_DoSlide( pm->ps, pm );
+		}
+	}
+
+	// Check for dodge on ground
+	if ( (pm->cmd.buttons & BUTTON_DODGE) &&
+		 !(pm->cmd.buttons & BUTTON_MODIFIER2) &&
+		 !(pm->cmd.buttons & BUTTON_MODIFIER3) ) {
+		if ( BG_CanDodge( pm->ps, pm->cmd.serverTime ) ) {
+			int direction = BG_GetMovementDirection( &pm->cmd );
+			if ( direction >= 0 ) {
+				BG_DoDodge( pm->ps, pm, direction );
+				return; // Dodge takes over movement
+			}
+		}
+	}
 
 	if ( PM_CheckJump () ) {
 		// jumped away

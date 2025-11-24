@@ -1,0 +1,56 @@
+# Build directories
+build/
+Build/
+out/
+cmake-build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+
+# Game modules
+baseq3/*.so
+baseq3/*.dll
+baseq3/*.dylib
+missionpack/*.so
+missionpack/*.dll
+missionpack/*.dylib
+
+# Object files
+*.o
+*.obj
+
+# IDE files
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# QVM bytecode
+*.qvm
+*.asm
+
+# Log files
+*.log
+qconsole.log
+
+# Editor backups
+*~
+*.bak
